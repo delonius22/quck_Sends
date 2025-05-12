@@ -1,0 +1,297 @@
+# Global Logging Configuration
+logging:
+  # Core logging components
+  components:
+    elasticsearch:
+      enabled: true
+      host: "http://elasticsearch:9200"
+      index_prefix: "selenium-tests"
+      retention_days: 30
+    
+    kibana:
+      enabled: true
+      host: "http://kibana:5601"
+      dashboards:
+        - "test-execution-overview"
+        - "vm-performance-metrics"
+        - "bot-error-analysis"
+    
+    prometheus:
+      enabled: true
+      host: "http://prometheus:9090"
+      scrape_interval: "15s"
+      retention_days: 15
+    
+    grafana:
+      enabled: true
+      host: "http://grafana:3000"
+      dashboards_path: "/etc/grafana/provisioning/dashboards"
+  
+  # Log storage configuration
+  storage:
+    type: "s3"
+    bucket: "selenium-test-logs"
+    region: "us-west-2"
+    path_structure: "{date}/{os}/{bot_id}/{test_id}"
+    retention:
+      hot_tier_days: 7
+      warm_tier_days: 30
+      cold_tier_days: 90
+      archive_days: 365
+  
+  # Structured log format
+  format:
+    type: "json"
+    timestamp_format: "ISO8601"
+    include_metadata: true
+    compression: "gzip"
+
+# Bot Activity Logging
+bot_activity:
+  # Test execution logs
+  test_execution:
+    enabled: true
+    level: "info"  # Options: debug, info, warn, error
+    events:
+      test_start: true
+      test_end: true
+      step_start: true
+      step_end: true
+      assertion: true
+      navigation: true
+      input: true
+      click: true
+      wait: true
+    context:
+      include_params: true
+      include_selectors: true
+      include_url: true
+      include_source: false  # Can be large, enable only when needed
+  
+  # Browser console logs
+  console:
+    enabled: true
+    levels:
+      info: true
+      warn: true
+      error: true
+      debug: false
+  
+  # Network request logging
+  network:
+    enabled: true
+    include:
+      requests: true
+      responses: true
+      headers: true
+      bodies: false  # May contain sensitive data, disabled by default
+    filters:
+      include_urls: ["*"]
+      exclude_urls: ["*.png", "*.jpg", "*.gif", "*.css"]
+    timing:
+      dns: true
+      connect: true
+      ssl: true
+      send: true
+      wait: true
+      receive: true
+  
+  # Visual capture
+  visual:
+    screenshots:
+      on_error: true
+      on_step: false
+      on_navigation: true
+      format: "png"
+      compression: 80
+      max_width: 1920
+      max_height: 1080
+    
+    video:
+      enabled: false  # Resource intensive, enable only when needed
+      framerate: 10
+      quality: "medium"
+      format: "mp4"
+  
+  # Error tracking
+  errors:
+    stack_trace: true
+    environment_snapshot: true
+    dom_snapshot: true
+    correlation_id: true
+
+# VM Performance Metrics
+vm_metrics:
+  # Collection frequency
+  collection_interval: "15s"
+  
+  # System resources
+  system:
+    cpu:
+      enabled: true
+      per_core: true
+      load_average: true
+    
+    memory:
+      enabled: true
+      virtual: true
+      swap: true
+      page_faults: true
+    
+    disk:
+      enabled: true
+      io_operations: true
+      throughput: true
+      latency: true
+    
+    network:
+      enabled: true
+      throughput: true
+      connections: true
+      packets: true
+      errors: true
+  
+  # Process specific metrics
+  process:
+    browser:
+      enabled: true
+      cpu_usage: true
+      memory_usage: true
+      thread_count: true
+      handle_count: true
+    
+    webdriver:
+      enabled: true
+      cpu_usage: true
+      memory_usage: true
+  
+  # Custom metrics
+  custom:
+    enabled: true
+    jvm_metrics: true
+    gc_metrics: true
+    thread_pool_metrics: true
+
+# Integration with External Systems
+integrations:
+  # Test management system integration
+  test_management:
+    system: "TestRail"
+    enabled: true
+    url: "https://example.testrail.com"
+    project_id: "TR-123"
+    sync_results: true
+    sync_defects: true
+  
+  # Incident management
+  incident_management:
+    system: "PagerDuty"
+    enabled: true
+    api_key: "${PAGERDUTY_API_KEY}"
+    service_id: "P123456"
+    alert_on:
+      failure_threshold: 5
+      error_rate_increase: 200  # Percentage
+      performance_degradation: 50  # Percentage
+  
+  # Notification channels
+  notifications:
+    slack:
+      enabled: true
+      webhook: "${SLACK_WEBHOOK_URL}"
+      channel: "#test-automation"
+      notify_on:
+        test_failure: true
+        infrastructure_issue: true
+        daily_summary: true
+    
+    email:
+      enabled: true
+      smtp_server: "smtp.example.com"
+      port: 587
+      use_tls: true
+      from: "selenium-tests@example.com"
+      recipients:
+        - "qa-team@example.com"
+        - "devops@example.com"
+      notify_on:
+        test_failure: true
+        infrastructure_issue: true
+        weekly_summary: true
+
+# Data Analysis Configuration
+analysis:
+  # Real-time analysis
+  real_time:
+    enabled: true
+    error_pattern_detection: true
+    performance_degradation_detection: true
+    flaky_test_detection: true
+  
+  # Batch analysis
+  batch:
+    enabled: true
+    schedule: "0 0 * * *"  # Daily at midnight
+    trend_analysis: true
+    regression_detection: true
+    test_duration_analysis: true
+  
+  # ML-based analysis
+  machine_learning:
+    enabled: false  # Enable when sufficient data is available
+    anomaly_detection: true
+    failure_prediction: true
+    root_cause_analysis: true
+    training_frequency: "weekly"
+
+# Security and Compliance
+security:
+  # Data encryption
+  encryption:
+    at_rest: true
+    in_transit: true
+    key_rotation: "quarterly"
+  
+  # Data masking
+  data_masking:
+    enabled: true
+    patterns:
+      - type: "credit_card"
+        regex: "\\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4}"
+        replacement: "XXXX-XXXX-XXXX-XXXX"
+      - type: "email"
+        regex: "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"
+        replacement: "email@redacted.com"
+      - type: "password"
+        regex: "password=.*?(&|$)"
+        replacement: "password=REDACTED"
+  
+  # Access control
+  access_control:
+    role_based: true
+    roles:
+      - name: "admin"
+        permissions: ["read", "write", "delete", "configure"]
+      - name: "developer"
+        permissions: ["read", "limited_write"]
+      - name: "viewer"
+        permissions: ["read"]
+  
+  # Audit logging
+  audit:
+    enabled: true
+    user_actions: true
+    system_changes: true
+    retention_days: 365
+
+# Distributed Tracing
+tracing:
+  enabled: true
+  provider: "jaeger"
+  endpoint: "http://jaeger:14268/api/traces"
+  sampling_rate: 0.1  # 10% of requests
+  propagation: "w3c"  # W3C Trace Context format
+  baggage_fields:
+    - "test_id"
+    - "bot_id"
+    - "os"
